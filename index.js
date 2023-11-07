@@ -40,6 +40,18 @@ http
         res.end("Received data: " + receivedData);
       });
     }
+    // if(req.method==="POST" && req.url==='/products'){
+
+    //   fs.writeFile('./products.json', JSON.stringify(products, null, 2), (error) => {
+      
+    //     if (error) {
+    //       console.log('An error has occurred ', error);
+    //       return;
+    //     }
+    //     console.log('Data written successfully to disk');
+    //   });
+    // }
+
     else if (req.method === "POST" && req.url === "/products") {
       let receivedData = "";
     
@@ -48,14 +60,27 @@ http
       });
     
       req.on("end", () => {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        fs.writeFile("./products.txt", receivedData, (err) => {
-          if (err) {
-            console.log("Something went wrong");
-            res.statusCode = 500;
-            res.end("Error: Something went wrong");
-          } 
-        });
+        try {
+          const receivedProduct = JSON.parse(receivedData);
+    
+          fs.writeFile("./products.json", JSON.stringify(receivedProduct, null, 2), (err) => {
+            if (err) {
+              console.log("Something went wrong");
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: "Something went wrong" }));
+            } else {
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ success: true }));
+            }
+          });
+        } catch (error) {
+          console.log("Invalid JSON format");
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Invalid JSON format" }));
+        }
       });
     }
     // else if (req.method === "POST" && req.url === "/products") {
